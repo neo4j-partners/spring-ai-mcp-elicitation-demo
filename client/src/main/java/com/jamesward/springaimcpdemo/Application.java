@@ -31,15 +31,18 @@ public class Application {
             var chatClient = chatClientBuilder.defaultTools(new DateTimeTools()).defaultToolCallbacks(callbackProvider).build();
 
             while (true) {
-                System.out.print("> ");
+                System.out.print("\n> ");
                 var userInput = scanner.nextLine();
-
-                var response = chatClient.prompt()
-                        .user(userInput)
-                        .call()
-                        .content();
-
-                System.out.println("< " + response);
+                if (!userInput.isBlank()) {
+                    chatClient.prompt()
+                            .user(userInput)
+                            .stream()
+                            .content()
+                            .doOnNext(System.out::print)
+                            .doOnComplete(System.out::println)
+                            .then()
+                            .block();
+                }
             }
         };
     }

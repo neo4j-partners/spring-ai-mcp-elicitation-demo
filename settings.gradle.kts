@@ -1,4 +1,4 @@
-rootProject.name = "spring-ai-mcp-demo"
+rootProject.name = "spring-ai-mcp-elicitation-demo"
 
 include("server", "client")
 
@@ -6,7 +6,6 @@ dependencyResolutionManagement {
     @Suppress("UnstableApiUsage")
     repositories {
         mavenCentral()
-        maven("https://repo.spring.io/milestone")
     }
 }
 

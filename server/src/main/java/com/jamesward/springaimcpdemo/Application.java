@@ -1,25 +1,19 @@
 package com.jamesward.springaimcpdemo;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.springaicommunity.mcp.annotation.McpArg;
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.context.McpSyncRequestContext;
 import org.springframework.ai.chat.client.AdvisorParams;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,29 +52,16 @@ class MyChatClient {
 @Service
 class FlightSearchService {
 
-//    final ChatClient chatClient;
+    final ChatClient chatClient;
 
-    /*
     public FlightSearchService(ChatClient chatClient) {
         this.chatClient = chatClient;
-    }
-
-     */
-    private final List<FlightSearchResult> flights;
-
-    FlightSearchService(@Value("classpath:/flights.json") Resource resource, ObjectMapper om) throws IOException {
-        var s = resource.getContentAsString(Charset.defaultCharset());
-        this.flights = om.readValue(s, new TypeReference<>() {});
-        System.out.println("Loaded " + flights.size() + " flights");
     }
 
     public List<FlightSearchResult> searchFlights(String departureAirportCode,
                                                   String arrivalAirportCode,
                                                   LocalDateTime dateTime,
                                                   String preferredAirline) {
-
-        return flights;
-        /*
         var preferredAirlinePrompt = preferredAirline == null ? "" : "The airline should be " + preferredAirline + ".";
         var prompt = "create 10 example flights between " + departureAirportCode + " and " + arrivalAirportCode + " on " + dateTime + ". Some of them should have connections with a minimum duration of 1hr. " + preferredAirlinePrompt;
 
@@ -91,8 +72,6 @@ class FlightSearchService {
                 .user(prompt)
                 .call()
                 .entity(new ParameterizedTypeReference<>() { });
-
-         */
     }
 
 }
