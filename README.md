@@ -22,3 +22,30 @@ In the client's console, ask:
 ```
 search flights denver to san francisco tomorrow
 ```
+
+```mermaid
+sequenceDiagram
+  autonumber
+  actor U as User
+  participant A as AI Agent
+  participant MCP as MCP Server
+  participant AI as AI Model (Bedrock)
+
+  U->>A: "search flights denver to san francisco tomorrow"
+  A->>AI: inference request (user query)
+  AI-->>A: call tool "flightSearch"
+
+  rect rgb(240, 240, 240)
+    note right of A: Tool call with Elicitation
+    A->>MCP: do tool call
+    MCP-->>A: elicit preferred airline
+    A-->>U: "preferred airline?"
+    U->>A: "United"
+    A->>MCP: continue with tool call
+    MCP-->>A: return flight results
+  end
+  
+  A->>AI: inference request (user query and tool results)
+  AI-->>A: flight result summary
+  A-->>U: display flight summary
+```
