@@ -6,6 +6,8 @@
 
 This demo uses AWS Bedrock, which requires valid AWS credentials. You can use either SSO or static credentials.
 
+> **Note:** Spring AI Bedrock does NOT support `AWS_BEARER_TOKEN_BEDROCK` or Bedrock API Keys for authentication. It uses the standard AWS SDK credential chain. See the [Spring AI Bedrock documentation](https://docs.spring.io/spring-ai/reference/api/bedrock.html) for supported authentication methods.
+
 **Option 1: AWS SSO (Recommended)**
 
 1. List your available AWS profiles:
@@ -30,10 +32,22 @@ This demo uses AWS Bedrock, which requires valid AWS credentials. You can use ei
    aws sts get-caller-identity
    ```
 
-**Option 2: Bearer Token**
+**Option 2: Static Credentials**
 
-1. [Create a Bedrock Bearer token](https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/api-keys/long-term/create)
-2. Set the env var: `export AWS_BEARER_TOKEN_BEDROCK=YOUR_TOKEN`
+Set environment variables directly:
+```
+export AWS_ACCESS_KEY_ID=your_access_key
+export AWS_SECRET_ACCESS_KEY=your_secret_key
+export AWS_REGION=us-east-1
+```
+
+Or configure in `~/.aws/credentials`:
+```
+[default]
+aws_access_key_id = your_access_key
+aws_secret_access_key = your_secret_key
+region = us-east-1
+```
 
 ### Running the Demo
 
