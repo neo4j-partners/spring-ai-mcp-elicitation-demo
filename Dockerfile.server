@@ -1,0 +1,63 @@
+# Dockerfile for Spring AI MCP Server deployment to Amazon Bedrock AgentCore
+#
+# Build from project root:
+#   docker build -f Dockerfile.server -t mcp-elicitation-server .
+#
+# Run locally:
+#   docker run -p 8000:8000 -e AWS_PROFILE=your-profile mcp-elicitation-server
+
+# Stage 1: Build the application
+FROM --platform=linux/arm64 public.ecr.aws/amazoncorretto/amazoncorretto:21-al2023 AS build
+
+WORKDIR /app
+
+# Install required build tools
+RUN yum install -y findutils tar gzip
+
+# Copy Gradle wrapper and build files
+COPY gradlew ./
+COPY gradle ./gradle
+COPY build.gradle.kts ./
+COPY settings.gradle.kts ./
+COPY server/build.gradle.kts ./server/
+COPY client/build.gradle.kts ./client/
+
+# Make gradlew executable
+RUN chmod +x ./gradlew
+
+# Create placeholder client source directory (required by Gradle settings)
+RUN mkdir -p client/src/main/kotlin
+
+# Download dependencies (cached layer)
+RUN ./gradlew :server:dependencies --no-daemon || true
+
+# Copy server source code
+COPY server/src ./server/src
+
+# Build the application
+RUN ./gradlew :server:bootJar --no-daemon
+
+# Stage 2: Create the runtime image
+FROM --platform=linux/arm64 public.ecr.aws/amazoncorretto/amazoncorretto:21-al2023
+
+WORKDIR /app
+
+# Install curl for health checks (--allowerasing replaces curl-minimal)
+RUN yum install -y --allowerasing curl && yum clean all
+
+# Copy the built JAR from the build stage
+COPY --from=build /app/server/build/libs/*.jar app.jar
+
+# Amazon Bedrock AgentCore Runtime expects:
+# - Host: 0.0.0.0
+# - Port: 8000 for MCP servers
+# - Platform: ARM64
+ENV PORT=8000
+EXPOSE 8000
+
+# Health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/ping || exit 1
+
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]

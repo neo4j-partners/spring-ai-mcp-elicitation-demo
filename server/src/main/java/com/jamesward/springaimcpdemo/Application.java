@@ -1,10 +1,8 @@
 package com.jamesward.springaimcpdemo;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import io.modelcontextprotocol.spec.McpSchema;
 import org.springaicommunity.mcp.annotation.McpArg;
 import org.springaicommunity.mcp.annotation.McpTool;
-import org.springaicommunity.mcp.context.McpSyncRequestContext;
 import org.springframework.ai.chat.client.AdvisorParams;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.boot.SpringApplication;
@@ -102,6 +100,14 @@ class MyTools {
         this.userService = userService;
     }
 
+    // Simple test tool to verify annotation scanner is working
+    @McpTool(description = "echo back the input message")
+    public String echo(
+            @McpArg(description = "message to echo", required = true)
+            String message) {
+        return "Echo: " + message;
+    }
+
     // todo: validate date is in the future
     @McpTool(description = "search for one-way flights")
     public List<FlightSearchResult> searchFlights(
@@ -114,22 +120,23 @@ class MyTools {
             @McpArg(description = "date to search flights for (YYYY-MM-DD)", required = true)
             LocalDate date,
 
-            McpSyncRequestContext context) {
+            @McpArg(description = "preferred airline (optional)", required = false)
+            String preferredAirline) {
 
-        // in real apps, propagate user identity
+        // In stateless mode (AgentCore), elicitation is not available
+        // so we accept preferredAirline as an optional parameter instead
         var userProfile = userService.getUserProfile();
 
-        if (userProfile.preferredAirline() == null || userProfile.preferredAirline().isBlank()) {
-            System.out.println("No preferred airline set, eliciting one...");
-            // todo: elicit a string? Or something with descriptions?
-            var elicitResult = context.elicit(UserProfile.class);
-            if (elicitResult.action() == McpSchema.ElicitResult.Action.ACCEPT) {
-                System.out.println("Elicitation result: " + elicitResult.structuredContent());
-                userProfile = userService.setPreferredAirline(elicitResult.structuredContent().preferredAirline());
-            }
+        // Use the provided preferredAirline or fall back to user profile
+        var airline = (preferredAirline != null && !preferredAirline.isBlank())
+            ? preferredAirline
+            : userProfile.preferredAirline();
+
+        if (airline != null && !airline.isBlank()) {
+            userService.setPreferredAirline(airline);
         }
 
         // there should be a time-of-day parameter (morning, afternoon, evening) but simplicity we just set the time to noon
-        return flightSearchService.searchFlights(departureAirportCode, arrivalAirportCode, date.atTime(12, 0), userProfile.preferredAirline());
+        return flightSearchService.searchFlights(departureAirportCode, arrivalAirportCode, date.atTime(12, 0), airline);
     }
 }

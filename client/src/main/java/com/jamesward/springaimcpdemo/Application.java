@@ -14,7 +14,6 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
 
 @SpringBootApplication
 public class Application {
@@ -23,48 +22,71 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    Scanner scanner = new Scanner(System.in);
-
     @Bean
     public ApplicationRunner applicationRunner(ChatClient.Builder chatClientBuilder, ToolCallbackProvider callbackProvider) {
         return args -> {
             var chatClient = chatClientBuilder.defaultTools(new DateTimeTools()).defaultToolCallbacks(callbackProvider).build();
 
-            while (true) {
-                System.out.print("\n> ");
-                var userInput = scanner.nextLine();
-                if (!userInput.isBlank()) {
-                    chatClient.prompt()
-                            .user(userInput)
-                            .stream()
-                            .content()
-                            .doOnNext(System.out::print)
-                            .doOnComplete(System.out::println)
-                            .then()
-                            .block();
-                }
+            // Automated test request
+            var testRequest = "Search for flights from SFO to JFK on 2025-03-15";
+            System.out.println("\n=== Automated MCP Client Test ===");
+            System.out.println("Sending request: " + testRequest);
+            System.out.println("================================\n");
+
+            try {
+                var response = chatClient.prompt()
+                        .user(testRequest)
+                        .call()
+                        .content();
+
+                System.out.println("\n=== Response ===");
+                System.out.println(response);
+                System.out.println("================\n");
+                System.out.println("TEST COMPLETED SUCCESSFULLY");
+            } catch (Exception e) {
+                System.err.println("\n=== Error ===");
+                System.err.println(e.getMessage());
+                e.printStackTrace();
+                System.err.println("=============\n");
+                System.err.println("TEST FAILED");
+                System.exit(1);
             }
+
+            System.exit(0);
         };
     }
 
     @McpElicitation(clients = {"flights"})
     public McpSchema.ElicitResult handleElicitationRequest(McpSchema.ElicitRequest request) {
+        System.out.println("\n=== Elicitation Request ===");
         System.out.println("Server has elicited: " + request.message());
 
         var props = (Map<String, Object>) request.requestedSchema().get("properties");
-
         var userData = new HashMap<String, Object>();
 
-        props.forEach( (prop, schema) -> {
+        // Auto-respond to elicitation with default values
+        props.forEach((prop, schema) -> {
             var description = ((Map<String, String>) schema).get("description");
-            System.out.print(description + "? ");
-            var userInput = scanner.nextLine();
-            userData.put(prop, userInput);
+            String autoValue = getAutoElicitationValue(prop);
+            System.out.println("  " + description + " -> " + autoValue);
+            userData.put(prop, autoValue);
         });
 
-        System.out.println("Sending user data back to server: " + userData);
+        System.out.println("Auto-responding with: " + userData);
+        System.out.println("===========================\n");
 
         return new McpSchema.ElicitResult(McpSchema.ElicitResult.Action.ACCEPT, userData);
+    }
+
+    private String getAutoElicitationValue(String prop) {
+        // Provide sensible defaults for common elicitation fields
+        return switch (prop.toLowerCase()) {
+            case "preferredairline" -> "United";
+            case "airline" -> "Delta";
+            case "class", "cabinclass" -> "Economy";
+            case "passengers" -> "1";
+            default -> "test-value";
+        };
     }
 }
 

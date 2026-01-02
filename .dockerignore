@@ -1,0 +1,33 @@
+# CDK and infrastructure
+infrastructure/cdk.out
+infrastructure/.venv
+infrastructure/__pycache__
+
+# Build outputs
+server/build
+client/build
+.gradle
+build
+
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Python
+__pycache__
+*.pyc
+.venv
+venv
+
+# Node
+node_modules
+
+# Misc
+*.log
+*.tmp
+.DS_Store
