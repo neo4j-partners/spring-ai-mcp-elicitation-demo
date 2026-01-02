@@ -62,7 +62,7 @@ class FlightSearchService {
                                                   String arrivalAirportCode,
                                                   LocalDateTime dateTime,
                                                   String preferredAirline) {
-        var preferredAirlinePrompt = preferredAirline == null ? "" : "The airline should be " + preferredAirline + ".";
+        var preferredAirlinePrompt = preferredAirline == null || preferredAirline.isBlank() ? "" : "The airline should be " + preferredAirline + ".";
         var prompt = "create 10 example flights between " + departureAirportCode + " and " + arrivalAirportCode + " on " + dateTime + ". Some of them should have connections with a minimum duration of 1hr. " + preferredAirlinePrompt;
 
         // todo: maybe ListOutputConverter ?
@@ -119,7 +119,7 @@ class MyTools {
         // in real apps, propagate user identity
         var userProfile = userService.getUserProfile();
 
-        if (userProfile.preferredAirline() == null) {
+        if (userProfile.preferredAirline() == null || userProfile.preferredAirline().isBlank()) {
             System.out.println("No preferred airline set, eliciting one...");
             // todo: elicit a string? Or something with descriptions?
             var elicitResult = context.elicit(UserProfile.class);
