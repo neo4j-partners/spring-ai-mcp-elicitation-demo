@@ -28,7 +28,7 @@ public class Application {
             var chatClient = chatClientBuilder.defaultTools(new DateTimeTools()).defaultToolCallbacks(callbackProvider).build();
 
             // Automated test request
-            var testRequest = "Search for flights from SFO to JFK on 2025-03-15";
+            var testRequest = "Search for flights on Delta from SFO to JFK on 2025-03-15";
             System.out.println("\n=== Automated MCP Client Test ===");
             System.out.println("Sending request: " + testRequest);
             System.out.println("================================\n");

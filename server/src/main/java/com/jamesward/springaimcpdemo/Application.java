@@ -123,8 +123,6 @@ class MyTools {
             @McpArg(description = "preferred airline (optional)", required = false)
             String preferredAirline) {
 
-        // In stateless mode (AgentCore), elicitation is not available
-        // so we accept preferredAirline as an optional parameter instead
         var userProfile = userService.getUserProfile();
 
         // Use the provided preferredAirline or fall back to user profile
